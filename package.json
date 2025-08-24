@@ -1,0 +1,52 @@
+{
+  "name": "tensaijs",
+  "version": "1.0.0",
+  "description": "A Love2D-style game engine for Node.js using SDL2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "install": "node-gyp rebuild",
+    "build": "tsc",
+    "test": "node test/test.js",
+    "clean": "rimraf build dist",
+    "rebuild": "npm run clean && npm run install && npm run build"
+  },
+  "keywords": [
+    "game",
+    "engine",
+    "sdl",
+    "love2d",
+    "graphics",
+    "audio",
+    "input"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "dependencies": {
+    "@types/node": "^24.3.0",
+    "node-addon-api": "^8.5.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.9.2"
+  },
+  "gypfile": true,
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "os": [
+    "win32",
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64",
+    "arm64"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/tensaijs"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/tensaijs/issues"
+  },
+  "homepage": "https://github.com/yourusername/tensaijs#readme"
+}
