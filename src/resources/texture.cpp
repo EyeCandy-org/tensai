@@ -1,3 +1,6 @@
 #include "texture.h"
 
-Texture::~Texture() { if (texture) SDL_DestroyTexture(texture); }
+Texture::~Texture() {
+  if (texture)
+    SDL_DestroyTexture(texture);
+}

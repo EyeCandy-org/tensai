@@ -6,9 +6,9 @@
 
 class Sound {
 public:
-    Mix_Chunk* chunk = nullptr;
-    Sound(const std::string& path);
-    ~Sound();
+  Mix_Chunk *chunk = nullptr;
+  Sound(const std::string &path);
+  ~Sound();
 };
 
 #endif // TENSAI_SOUND_H

@@ -5,9 +5,9 @@
 
 class Texture {
 public:
-    SDL_Texture* texture = nullptr;
-    int width = 0, height = 0;
-    ~Texture();
+  SDL_Texture *texture = nullptr;
+  int width = 0, height = 0;
+  ~Texture();
 };
 
 #endif // TENSAI_TEXTURE_H

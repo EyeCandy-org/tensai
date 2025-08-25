@@ -6,17 +6,17 @@
 
 class Transform {
 public:
-    Vec2 position{0, 0};
-    Vec2 scale{1, 1};
-    float rotation = 0.0f;
-    Vec2 origin{0, 0};
-    bool useDegrees = false;
+  Vec2 position{0, 0};
+  Vec2 scale{1, 1};
+  float rotation = 0.0f;
+  Vec2 origin{0, 0};
+  bool useDegrees = false;
 
-    SDL_Point getSDLOrigin() const;
-    double getRotation() const;
+  SDL_Point getSDLOrigin() const;
+  double getRotation() const;
 
-    void setRotation(float angleInRadians);
-    void setRotationDegrees(float angleInDegrees);
+  void setRotation(float angleInRadians);
+  void setRotationDegrees(float angleInDegrees);
 };
 
 #endif // TENSAI_TRANSFORM_H

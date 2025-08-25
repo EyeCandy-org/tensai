@@ -6,9 +6,9 @@
 
 class Music {
 public:
-    Mix_Music* music = nullptr;
-    Music(const std::string& path);
-    ~Music();
+  Mix_Music *music = nullptr;
+  Music(const std::string &path);
+  ~Music();
 };
 
 #endif // TENSAI_MUSIC_H

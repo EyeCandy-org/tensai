@@ -6,10 +6,10 @@
 
 class Font {
 public:
-    TTF_Font* font = nullptr;
-    int size;
-    Font(const std::string& path, int size);
-    ~Font();
+  TTF_Font *font = nullptr;
+  int size;
+  Font(const std::string &path, int size);
+  ~Font();
 };
 
 #endif // TENSAI_FONT_H
