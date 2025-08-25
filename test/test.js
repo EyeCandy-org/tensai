@@ -1,6 +1,6 @@
 const { Tensai, Keys, Mouse } = require('../index.js');
 
-const tensai = Tensai("Tensai Game Example", 800, 600, false, true);
+const tensai = Tensai("Tensai Game Example", 1920, 1080, true, true);
 
 let playerX = 400;
 let playerY = 300;
@@ -19,7 +19,7 @@ tensai.load = () => {
   backgroundMusic = tensai.loadMusic("assets/background.ogg");
   jumpSound = tensai.loadSound("assets/jump.wav");
   
-  if (font) tensai.setFont(font);
+  //if (font) tensai.setFont(font);
   if (backgroundMusic) tensai.playMusic(backgroundMusic);
   
   for (let i = 0; i < 50; i++) {
@@ -156,7 +156,8 @@ tensai.draw = () => {
       255,
       255,
       255,
-      255
+      255,
+      "radians"
     );
   } else {
     tensai.setColor(255, 100, 100);
@@ -169,7 +170,7 @@ tensai.draw = () => {
   tensai.drawLine(mousePos.x, mousePos.y - 10, mousePos.x, mousePos.y + 10);
   
   tensai.setColor(255, 255, 255);
-  tensai.drawText(`FPS: ${Math.round(tensai.getFPS())}`, 10, 10);
+  tensai.drawText(`FPS: ${Math.round(tensai.getFPS())}`, 50, 10);
   tensai.drawText(`Time: ${tensai.getTime().toFixed(2)}s`, 10, 40);
   tensai.drawText(`Particles: ${particles.length}`, 10, 70);
   tensai.drawText(`Player: (${Math.round(playerX)}, ${Math.round(playerY)})`, 10, 100);

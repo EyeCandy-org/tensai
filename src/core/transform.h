@@ -10,8 +10,13 @@ public:
     Vec2 scale{1, 1};
     float rotation = 0.0f;
     Vec2 origin{0, 0};
+    bool useDegrees = false;
+
     SDL_Point getSDLOrigin() const;
-    double getRotationDegrees() const;
+    double getRotation() const;
+
+    void setRotation(float angleInRadians);
+    void setRotationDegrees(float angleInDegrees);
 };
 
 #endif // TENSAI_TRANSFORM_H

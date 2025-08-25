@@ -118,7 +118,7 @@ void Graphics::drawTexture(std::shared_ptr<Texture> texture, const Transform& tr
     } else {
         SDL_Point center = transform.getSDLOrigin();
         SDL_RenderCopyEx(renderer, texture->texture, nullptr, &dst, 
-                       transform.getRotationDegrees(), &center, SDL_FLIP_NONE);
+                       transform.getRotation(), &center, SDL_FLIP_NONE);
     }
 }
 

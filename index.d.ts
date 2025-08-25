@@ -89,6 +89,7 @@ export declare class TensaiEngine {
     tintG?: number,
     tintB?: number,
     tintA?: number,
+    angleUnit?: "radians" | "degrees",
   ): void;
 
   drawText(

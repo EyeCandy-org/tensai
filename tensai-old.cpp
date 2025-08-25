@@ -12,32 +12,538 @@
 #include <cmath>
 #include <algorithm>
 #include <thread>
+class Vec2 {
+public:
+    float x, y;
+    Vec2(float x = 0, float y = 0) : x(x), y(y) {}
+    Vec2 operator+(const Vec2& other) const { return Vec2(x + other.x, y + other.y); }
+    Vec2 operator-(const Vec2& other) const { return Vec2(x - other.x, y - other.y); }
+    Vec2 operator*(float scalar) const { return Vec2(x * scalar, y * scalar); }
+    Vec2 operator*(const Vec2& other) const { return Vec2(x * other.x, y * other.y); }
+    float length() const { return sqrt(x * x + y * y); }
+    Vec2 normalize() const { float len = length(); return len > 0 ? Vec2(x/len, y/len) : Vec2(0, 0); }
+};
 
-#include "core/vec2.h"
-#include "core/color.h"
-#include "core/transform.h"
+class Color {
+public:
+    Uint8 r, g, b, a;
+    Color(Uint8 r = 255, Uint8 g = 255, Uint8 b = 255, Uint8 a = 255) : r(r), g(g), b(b), a(a) {}
+};
 
+class Transform {
+public:
+    Vec2 position{0, 0};
+    Vec2 scale{1, 1};
+    float rotation = 0.0f;
+    Vec2 origin{0, 0};
+    SDL_Point getSDLOrigin() const { return {(int)origin.x, (int)origin.y}; }
+    double getRotationDegrees() const { return rotation * 180.0 / M_PI; }
+};
 
-#include "resources/texture.h"
-#include "resources/font.h"
-#include "resources/sound.h"
-#include "resources/music.h"
+class Texture {
+public:
+    SDL_Texture* texture = nullptr;
+    int width = 0, height = 0;
+    ~Texture() { if (texture) SDL_DestroyTexture(texture); }
+};
 
-#include "modules/input.h"
-#include "modules/camera.h"
-#include "modules/graphics.h"
-#include "modules/timer.h"
-#include "modules/random.h"
-#include "modules/physics.h"
-#include "modules/audio.h"
+class Font {
+public:
+    TTF_Font* font = nullptr;
+    int size;
+    Font(const std::string& path, int size) : size(size) {
+        font = TTF_OpenFont(path.c_str(), size);
+    }
+    
+    ~Font() { if (font) TTF_CloseFont(font); }
+};
 
-#include "modules/input.h"
-#include "modules/camera.h"
-#include "modules/graphics.h"
-#include "modules/timer.h"
-#include "modules/random.h"
-#include "modules/physics.h"
-#include "modules/audio.h"
+class Sound {
+public:
+    Mix_Chunk* chunk = nullptr;
+    Sound(const std::string& path) {
+        chunk = Mix_LoadWAV(path.c_str());
+    }
+    
+    ~Sound() { if (chunk) Mix_FreeChunk(chunk); }
+};
+
+class Music {
+public:
+    Mix_Music* music = nullptr;
+    Music(const std::string& path) {
+        music = Mix_LoadMUS(path.c_str());
+    }
+    
+    ~Music() { if (music) Mix_FreeMusic(music); }
+};
+
+class Input {
+private:
+    std::unordered_map<int, bool> currentKeys;
+    std::unordered_map<int, bool> previousKeys;
+    std::unordered_map<int, bool> currentMouse;
+    std::unordered_map<int, bool> previousMouse;
+    Vec2 mousePos{0, 0};
+    Vec2 mouseWheel{0, 0};
+    
+public:
+    void update() {
+        previousKeys = currentKeys;
+        previousMouse = currentMouse;
+        mouseWheel = Vec2(0, 0);
+    }
+    
+    void setKey(int key, bool pressed) { currentKeys[key] = pressed; }
+    void setMouse(int button, bool pressed) { currentMouse[button] = pressed; }
+    void setMousePos(int x, int y) { mousePos = Vec2(x, y); }
+    void setMouseWheel(int x, int y) { mouseWheel = Vec2(x, y); }
+    bool isDown(int key) const { 
+        auto it = currentKeys.find(key);
+        return it != currentKeys.end() && it->second;
+    }
+    
+    bool isPressed(int key) const {
+        auto curr = currentKeys.find(key);
+        auto prev = previousKeys.find(key);
+        bool currPressed = curr != currentKeys.end() && curr->second;
+        bool prevPressed = prev != previousKeys.end() && prev->second;
+        return currPressed && !prevPressed;
+    }
+    
+    bool isReleased(int key) const {
+        auto curr = currentKeys.find(key);
+        auto prev = previousKeys.find(key);
+        bool currPressed = curr != currentKeys.end() && curr->second;
+        bool prevPressed = prev != previousKeys.end() && prev->second;
+        return !currPressed && prevPressed;
+    }
+    
+    bool isMouseDown(int button) const {
+        auto it = currentMouse.find(button);
+        return it != currentMouse.end() && it->second;
+    }
+    
+    bool isMousePressed(int button) const {
+        auto curr = currentMouse.find(button);
+        auto prev = previousMouse.find(button);
+        bool currPressed = curr != currentMouse.end() && curr->second;
+        bool prevPressed = prev != previousMouse.end() && prev->second;
+        return currPressed && !prevPressed;
+    }
+    
+    bool isMouseReleased(int button) const {
+        auto curr = currentMouse.find(button);
+        auto prev = previousMouse.find(button);
+        bool currPressed = curr != currentMouse.end() && curr->second;
+        bool prevPressed = prev != previousMouse.end() && prev->second;
+        return !currPressed && prevPressed;
+    }
+    
+    Vec2 getMousePosition() const { return mousePos; }
+    Vec2 getMouseWheel() const { return mouseWheel; }
+};
+
+class Camera {
+public:
+    Vec2 position{0, 0};
+    float rotation = 0.0f;
+    Vec2 scale{1, 1};
+    
+    void translate(const Vec2& offset) { position = position + offset; }
+    void rotate(float angle) { rotation += angle; }
+    void zoom(float factor) { scale = scale * factor; }
+    void lookAt(const Vec2& target) { position = target; }
+    
+    Vec2 worldToScreen(const Vec2& worldPos, int screenWidth, int screenHeight) const {
+        Vec2 translated = worldPos - position;
+        float cos_r = cos(-rotation);
+        float sin_r = sin(-rotation);
+        Vec2 rotated(translated.x * cos_r - translated.y * sin_r,
+                     translated.x * sin_r + translated.y * cos_r);
+        Vec2 scaled(rotated.x * scale.x, rotated.y * scale.y);
+        return Vec2(scaled.x + screenWidth/2, scaled.y + screenHeight/2);
+    }
+    
+    Vec2 screenToWorld(const Vec2& screenPos, int screenWidth, int screenHeight) const {
+        Vec2 centered(screenPos.x - screenWidth/2, screenPos.y - screenHeight/2);
+        Vec2 unscaled(centered.x / scale.x, centered.y / scale.y);
+        float cos_r = cos(rotation);
+        float sin_r = sin(rotation);
+        Vec2 rotated(unscaled.x * cos_r - unscaled.y * sin_r,
+                     unscaled.x * sin_r + unscaled.y * cos_r);
+        return rotated + position;
+    }
+};
+
+class Graphics {
+private:
+    SDL_Renderer* renderer;
+    Camera camera;
+    Color currentColor{255, 255, 255, 255};
+    std::shared_ptr<Font> currentFont;
+    float lineWidth = 1.0f;
+    
+public:
+    Graphics(SDL_Renderer* r) : renderer(r) {}
+    
+    void setColor(const Color& color) {
+        currentColor = color;
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+    }
+    
+    void setFont(std::shared_ptr<Font> font) { currentFont = font; }
+    void setLineWidth(float width) { lineWidth = width; }
+    
+    void clear(const Color& color = Color(0, 0, 0, 255)) {
+        SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+        SDL_RenderClear(renderer);
+    }
+    
+    void present() { SDL_RenderPresent(renderer); }
+    
+    void drawPoint(const Vec2& pos) {
+        SDL_RenderDrawPoint(renderer, (int)pos.x, (int)pos.y);
+    }
+    
+    void drawLine(const Vec2& start, const Vec2& end) {
+        if (lineWidth <= 1.0f) {
+            SDL_RenderDrawLine(renderer, (int)start.x, (int)start.y, (int)end.x, (int)end.y);
+        } else {
+            Vec2 dir = (end - start).normalize();
+            Vec2 perp(-dir.y, dir.x);
+            Vec2 offset = perp * (lineWidth / 2.0f);
+            
+            SDL_Point points[4] = {
+                {(int)(start.x + offset.x), (int)(start.y + offset.y)},
+                {(int)(start.x - offset.x), (int)(start.y - offset.y)},
+                {(int)(end.x - offset.x), (int)(end.y - offset.y)},
+                {(int)(end.x + offset.x), (int)(end.y + offset.y)}
+            };
+            
+            SDL_RenderDrawLines(renderer, points, 5);
+        }
+    }
+    
+    void drawRect(const Vec2& pos, const Vec2& size, bool filled = false) {
+        SDL_Rect rect = {(int)pos.x, (int)pos.y, (int)size.x, (int)size.y};
+        if (filled) {
+            SDL_RenderFillRect(renderer, &rect);
+        } else {
+            SDL_RenderDrawRect(renderer, &rect);
+        }
+    }
+    
+    void drawCircle(const Vec2& center, float radius, bool filled = false) {
+        int segments = std::max(8, (int)(radius * 0.5f));
+        std::vector<SDL_Point> points;
+        
+        for (int i = 0; i <= segments; i++) {
+            float angle = 2.0f * M_PI * i / segments;
+            int x = (int)(center.x + radius * cos(angle));
+            int y = (int)(center.y + radius * sin(angle));
+            points.push_back({x, y});
+        }
+        
+        if (filled) {
+            for (int i = 1; i < segments; i++) {
+                SDL_Point triangle[3] = {
+                    {(int)center.x, (int)center.y},
+                    points[i-1],
+                    points[i]
+                };
+                SDL_RenderDrawLines(renderer, triangle, 4);
+            }
+        } else {
+            SDL_RenderDrawLines(renderer, points.data(), points.size());
+        }
+    }
+    
+    void drawEllipse(const Vec2& center, const Vec2& radii, bool filled = false) {
+        int segments = std::max(16, (int)((radii.x + radii.y) * 0.25f));
+        std::vector<SDL_Point> points;
+        
+        for (int i = 0; i <= segments; i++) {
+            float angle = 2.0f * M_PI * i / segments;
+            int x = (int)(center.x + radii.x * cos(angle));
+            int y = (int)(center.y + radii.y * sin(angle));
+            points.push_back({x, y});
+        }
+        
+        if (filled) {
+            for (int i = 1; i < segments; i++) {
+                SDL_Point triangle[3] = {
+                    {(int)center.x, (int)center.y},
+                    points[i-1],
+                    points[i]
+                };
+                SDL_RenderDrawLines(renderer, triangle, 4);
+            }
+        } else {
+            SDL_RenderDrawLines(renderer, points.data(), points.size());
+        }
+    }
+    
+    void drawTexture(std::shared_ptr<Texture> texture, const Transform& transform, const Color& tint = Color(255,255,255,255)) {
+        if (!texture || !texture->texture) return;
+        
+        SDL_SetTextureColorMod(texture->texture, tint.r, tint.g, tint.b);
+        SDL_SetTextureAlphaMod(texture->texture, tint.a);
+        
+        SDL_Rect dst = {
+            (int)(transform.position.x - transform.origin.x * transform.scale.x),
+            (int)(transform.position.y - transform.origin.y * transform.scale.y),
+            (int)(texture->width * transform.scale.x),
+            (int)(texture->height * transform.scale.y)
+        };
+        
+        if (transform.rotation == 0.0f) {
+            SDL_RenderCopy(renderer, texture->texture, nullptr, &dst);
+        } else {
+            SDL_Point center = transform.getSDLOrigin();
+            SDL_RenderCopyEx(renderer, texture->texture, nullptr, &dst, 
+                           transform.getRotationDegrees(), &center, SDL_FLIP_NONE);
+        }
+    }
+    
+    void drawText(const std::string& text, const Vec2& pos, const Color& color = Color(255,255,255,255)) {
+        if (!currentFont || !currentFont->font) return;
+        
+        SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
+        SDL_Surface* surface = TTF_RenderText_Solid(currentFont->font, text.c_str(), sdlColor);
+        if (!surface) return;
+        
+        SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+        if (texture) {
+            SDL_Rect dst = {(int)pos.x, (int)pos.y, surface->w, surface->h};
+            SDL_RenderCopy(renderer, texture, nullptr, &dst);
+            SDL_DestroyTexture(texture);
+        }
+        SDL_FreeSurface(surface);
+    }
+    
+    void drawPolygon(const std::vector<Vec2>& vertices, bool filled = false) {
+        if (vertices.size() < 3) return;
+        
+        std::vector<SDL_Point> points;
+        for (const auto& v : vertices) {
+            points.push_back({(int)v.x, (int)v.y});
+        }
+        points.push_back(points[0]);
+        
+        if (filled) {
+            for (size_t i = 1; i < vertices.size() - 1; i++) {
+                SDL_Point triangle[4] = {
+                    {(int)vertices[0].x, (int)vertices[0].y},
+                    {(int)vertices[i].x, (int)vertices[i].y},
+                    {(int)vertices[i+1].x, (int)vertices[i+1].y},
+                    {(int)vertices[0].x, (int)vertices[0].y}
+                };
+                SDL_RenderDrawLines(renderer, triangle, 4);
+            }
+        } else {
+            SDL_RenderDrawLines(renderer, points.data(), points.size());
+        }
+    }
+    
+    Camera& getCamera() { return camera; }
+    void setCamera(const Camera& cam) { camera = cam; }
+    
+    void pushMatrix() {}
+    void popMatrix() {}
+    void translate(const Vec2& offset) { camera.translate(offset * -1); }
+    void rotate(float angle) { camera.rotate(angle * -1); }
+    void scale(const Vec2& scale) { camera.scale = camera.scale * Vec2(1.0f/scale.x, 1.0f/scale.y); }
+};
+
+class Timer {
+private:
+    std::chrono::high_resolution_clock::time_point startTime;
+    std::chrono::high_resolution_clock::time_point lastFrame;
+    double deltaTime = 0.0;
+    double totalTime = 0.0;
+    int frameCount = 0;
+    double fps = 0.0;
+    double fpsUpdateTime = 0.0;
+    
+public:
+    Timer() : startTime(std::chrono::high_resolution_clock::now()), lastFrame(startTime) {}
+    
+    void update() {
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        deltaTime = std::chrono::duration<double>(currentTime - lastFrame).count();
+        totalTime = std::chrono::duration<double>(currentTime - startTime).count();
+        lastFrame = currentTime;
+        frameCount++;
+        
+        fpsUpdateTime += deltaTime;
+        if (fpsUpdateTime >= 1.0) {
+            fps = frameCount / fpsUpdateTime;
+            frameCount = 0;
+            fpsUpdateTime = 0.0;
+        }
+    }
+    
+    double getDelta() const { return deltaTime; }
+    double getTime() const { return totalTime; }
+    double getFPS() const { return fps; }
+    
+    void sleep(double seconds) {
+        auto duration = std::chrono::duration<double>(seconds);
+        std::this_thread::sleep_for(duration);
+    }
+};
+
+class Random {
+private:
+    std::mt19937 generator;
+    
+public:
+    Random() : generator(std::random_device{}()) {}
+    Random(uint32_t seed) : generator(seed) {}
+    
+    void setSeed(uint32_t seed) { generator.seed(seed); }
+    
+    int randomInt(int min, int max) {
+        std::uniform_int_distribution<int> dist(min, max);
+        return dist(generator);
+    }
+    
+    float randomFloat(float min = 0.0f, float max = 1.0f) {
+        std::uniform_real_distribution<float> dist(min, max);
+        return dist(generator);
+    }
+    
+    bool randomBool() {
+        return randomFloat() < 0.5f;
+    }
+    
+    Vec2 randomVec2(const Vec2& min = Vec2(0,0), const Vec2& max = Vec2(1,1)) {
+        return Vec2(randomFloat(min.x, max.x), randomFloat(min.y, max.y));
+    }
+};
+
+class Physics {
+public:
+    struct Body {
+        Vec2 position{0, 0};
+        Vec2 velocity{0, 0};
+        Vec2 acceleration{0, 0};
+        float mass = 1.0f;
+        float friction = 0.0f;
+        float restitution = 1.0f;
+        bool kinematic = false;
+    };
+    
+    struct AABB {
+        Vec2 min, max;
+        
+        bool intersects(const AABB& other) const {
+            return max.x >= other.min.x && min.x <= other.max.x &&
+                   max.y >= other.min.y && min.y <= other.max.y;
+        }
+        
+        bool contains(const Vec2& point) const {
+            return point.x >= min.x && point.x <= max.x &&
+                   point.y >= min.y && point.y <= max.y;
+        }
+    };
+    
+    static bool circleCircleCollision(const Vec2& pos1, float radius1, const Vec2& pos2, float radius2) {
+        float dx = pos2.x - pos1.x;
+        float dy = pos2.y - pos1.y;
+        float distance = sqrt(dx*dx + dy*dy);
+        return distance < (radius1 + radius2);
+    }
+    
+    static bool pointInCircle(const Vec2& point, const Vec2& center, float radius) {
+        float dx = point.x - center.x;
+        float dy = point.y - center.y;
+        return (dx*dx + dy*dy) <= (radius*radius);
+    }
+    
+    static void updateBody(Body& body, float dt) {
+        if (body.kinematic) return;
+        
+        body.velocity = body.velocity + body.acceleration * dt;
+        body.velocity = body.velocity * (1.0f - body.friction * dt);
+        body.position = body.position + body.velocity * dt;
+        body.acceleration = Vec2(0, 0);
+    }
+    
+    static void applyForce(Body& body, const Vec2& force) {
+        body.acceleration = body.acceleration + force * (1.0f / body.mass);
+    }
+    
+    static void resolveCollision(Body& body1, Body& body2, const Vec2& normal) {
+        Vec2 relativeVelocity = body2.velocity - body1.velocity;
+        float velAlongNormal = relativeVelocity.x * normal.x + relativeVelocity.y * normal.y;
+        
+        if (velAlongNormal > 0) return;
+        
+        float e = std::min(body1.restitution, body2.restitution);
+        float j = -(1 + e) * velAlongNormal;
+        j /= (1.0f / body1.mass) + (1.0f / body2.mass);
+        
+        Vec2 impulse = normal * j;
+        body1.velocity = body1.velocity - impulse * (1.0f / body1.mass);
+        body2.velocity = body2.velocity + impulse * (1.0f / body2.mass);
+    }
+};
+
+class Audio {
+private:
+    std::unordered_map<std::string, std::shared_ptr<Sound>> sounds;
+    std::unordered_map<std::string, std::shared_ptr<Music>> musics;
+    
+public:
+    Audio() {
+        Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048);
+    }
+    
+    ~Audio() {
+        Mix_CloseAudio();
+    }
+    
+    std::shared_ptr<Sound> loadSound(const std::string& path) {
+        auto sound = std::make_shared<Sound>(path);
+        if (sound->chunk) {
+            sounds[path] = sound;
+            return sound;
+        }
+        return nullptr;
+    }
+    
+    std::shared_ptr<Music> loadMusic(const std::string& path) {
+        auto music = std::make_shared<Music>(path);
+        if (music->music) {
+            musics[path] = music;
+            return music;
+        }
+        return nullptr;
+    }
+    
+    void playSound(std::shared_ptr<Sound> sound, int volume = 128, int channel = -1) {
+        if (sound && sound->chunk) {
+            Mix_VolumeChunk(sound->chunk, volume);
+            Mix_PlayChannel(channel, sound->chunk, 0);
+        }
+    }
+    
+    void playMusic(std::shared_ptr<Music> music, int loops = -1) {
+        if (music && music->music) {
+            Mix_PlayMusic(music->music, loops);
+        }
+    }
+    
+    void pauseMusic() { Mix_PauseMusic(); }
+    void resumeMusic() { Mix_ResumeMusic(); }
+    void stopMusic() { Mix_HaltMusic(); }
+    void setMusicVolume(int volume) { Mix_VolumeMusic(volume); }
+    
+    bool isMusicPlaying() const { return Mix_PlayingMusic(); }
+    bool isMusicPaused() const { return Mix_PausedMusic(); }
+};
 
 class TensaiEngine : public Napi::ObjectWrap<TensaiEngine> {
 private:
@@ -537,13 +1043,7 @@ public:
                 transform.position.x = info[1].As<Napi::Number>().FloatValue();
                 transform.position.y = info[2].As<Napi::Number>().FloatValue();
                 
-                if (info.Length() >= 4) {
-                if (info.Length() >= 13 && info[12].IsString() && info[12].As<Napi::String>().Utf8Value() == "degrees") {
-                    transform.setRotationDegrees(info[3].As<Napi::Number>().FloatValue());
-                } else {
-                    transform.setRotation(info[3].As<Napi::Number>().FloatValue());
-                }
-            }
+                if (info.Length() >= 4) transform.rotation = info[3].As<Napi::Number>().FloatValue();
                 if (info.Length() >= 6) {
                     transform.scale.x = info[4].As<Napi::Number>().FloatValue();
                     transform.scale.y = info[5].As<Napi::Number>().FloatValue();
