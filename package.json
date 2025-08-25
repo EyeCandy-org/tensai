@@ -9,7 +9,8 @@
     "build": "tsc",
     "test": "node test/test.js",
     "clean": "rimraf build dist",
-    "rebuild": "npm run clean && npm run install && npm run build"
+    "rebuild": "npm run clean && npm run install && npm run build",
+    "format": "clang-format -i src/**/*.cpp src/**/*.h"
   },
   "keywords": [
     "game",
@@ -20,8 +21,8 @@
     "audio",
     "input"
   ],
-  "author": "Your Name",
-  "license": "MIT",
+  "author": "NEOAPPS",
+  "license": "LGPL-3.0",
   "dependencies": {
     "@types/node": "^24.3.0",
     "node-addon-api": "^8.5.0",
@@ -43,10 +44,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/yourusername/tensaijs"
+    "url": "https://github.com/neoapps-dev/tensai"
   },
   "bugs": {
-    "url": "https://github.com/yourusername/tensaijs/issues"
+    "url": "https://github.com/neoapps-dev/tensai/issues"
   },
-  "homepage": "https://github.com/yourusername/tensaijs#readme"
+  "homepage": "https://github.com/neoapps-dev/tensai#readme"
 }
