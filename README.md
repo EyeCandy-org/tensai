@@ -36,7 +36,7 @@ To get started with the Tensai Engine, follow these simple steps:
 
     This command will automatically compile the native C++ addon using `node-gyp`.
 
-## 💡 Usage
+## Usage
 
 Here's a minimal example demonstrating how to set up and run a basic Tensai application:
 
@@ -77,7 +77,7 @@ console.log("Tensai application started. Check the window!");
 
 This example initializes a window, sets up basic `load`, `update`, and `draw` functions, and starts the engine loop. For a more comprehensive demonstration of the engine's capabilities, please refer to the examples section.
 
-## 🎮 Examples
+## Examples
 
 The `test/test.js` file serves as a runnable example showcasing various features of the Tensai Engine, including graphics rendering, input handling, sound, music, and particle effects.
 
@@ -89,7 +89,7 @@ node test/test.js
 
 **Note:** This example may require the assets located in the `assets/` directory to run correctly.
 
-## 🛠️ Building
+## Building
 
 The C++ addon is automatically built when you run `npm install`. This process is orchestrated by `node-gyp` using the `binding.gyp` configuration.
 
@@ -104,6 +104,6 @@ node-gyp rebuild
 -   **macOS:** Xcode Command Line Tools
 -   **GNU/Linux:** `build-essential` package (or equivalent)
 
-## 📜 License
+## License
 
 This project is proudly distributed under the [LGPL-3.0 License](LICENSE).
