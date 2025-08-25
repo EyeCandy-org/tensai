@@ -1,7 +1,5 @@
 const { Tensai, Keys, Mouse } = require('../index.js');
-
 const tensai = Tensai("Tensai Game Example", 1920, 1080, true, true);
-
 let playerX = 400;
 let playerY = 300;
 let playerSpeed = 200;
@@ -10,18 +8,19 @@ let texture = null;
 let font = null;
 let backgroundMusic = null;
 let jumpSound = null;
-
 tensai.load = () => {
   console.log("Loading game assets...");
-  
   texture = tensai.loadTexture("assets/player.png");
   font = tensai.loadFont("assets/font.ttf", 24);
+  if (!font) {
+    console.warn("Failed to load primary font.");
+    console.error("Text rendering may not work.");
+  }
+
+  if (font) tensai.setFont(font);
   backgroundMusic = tensai.loadMusic("assets/background.ogg");
   jumpSound = tensai.loadSound("assets/jump.wav");
-  
-  //if (font) tensai.setFont(font);
   if (backgroundMusic) tensai.playMusic(backgroundMusic);
-  
   for (let i = 0; i < 50; i++) {
     particles.push({
       x: tensai.randomFloat(0, 800),
@@ -215,5 +214,4 @@ tensai.draw = () => {
 
 console.log("Starting Tensai game engine...");
 console.log("Controls: WASD/Arrow keys to move, Space for particles, Left click for mouse particles, ESC to quit");
-
 tensai.run();
