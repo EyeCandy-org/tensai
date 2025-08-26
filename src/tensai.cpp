@@ -83,6 +83,7 @@ public:
             InstanceMethod("drawCircle", &TensaiEngine::DrawCircle),
             InstanceMethod("drawTexture", &TensaiEngine::DrawTexture),
             InstanceMethod("drawText", &TensaiEngine::DrawText),
+            InstanceMethod("drawPolygon", &TensaiEngine::DrawPolygon),
             InstanceMethod("setFont", &TensaiEngine::SetFont),
             InstanceMethod("playSound", &TensaiEngine::PlaySound),
             InstanceMethod("playMusic", &TensaiEngine::PlayMusic),
@@ -540,6 +541,40 @@ public:
       graphics->drawText(text, pos, color);
     }
     return info.Env().Undefined();
+  }
+
+  Napi::Value DrawPolygon(const Napi::CallbackInfo &info) {
+    Napi::Env env = info.Env();
+    if (info.Length() < 1 || !info[0].IsArray()) {
+      Napi::TypeError::New(env, "Expected an array of points").ThrowAsJavaScriptException();
+      return env.Undefined();
+    }
+
+    Napi::Array pointsArray = info[0].As<Napi::Array>();
+    std::vector<Vec2> vertices;
+    for (unsigned int i = 0; i < pointsArray.Length(); ++i) {
+      Napi::Value pointValue = pointsArray[i];
+      if (!pointValue.IsObject()) {
+        Napi::TypeError::New(env, "Expected array of objects with x and y properties").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      Napi::Object pointObject = pointValue.As<Napi::Object>();
+      if (!pointObject.Has("x") || !pointObject.Has("y")) {
+        Napi::TypeError::New(env, "Expected point objects to have x and y properties").ThrowAsJavaScriptException();
+        return env.Undefined();
+      }
+      float x = pointObject.Get("x").As<Napi::Number>().FloatValue();
+      float y = pointObject.Get("y").As<Napi::Number>().FloatValue();
+      vertices.push_back({x, y});
+    }
+
+    bool filled = false;
+    if (info.Length() >= 2 && info[1].IsBoolean()) {
+      filled = info[1].As<Napi::Boolean>().Value();
+    }
+
+    graphics->drawPolygon(vertices, filled);
+    return env.Undefined();
   }
 
   Napi::Value SetFont(const Napi::CallbackInfo &info) {
