@@ -1,26 +1,52 @@
 #include "graphics.h"
-Graphics::Graphics(SDL_Renderer *r) : renderer(r) {}
+#include <cstdio>
+#include <cstdlib>
+
+Graphics::Graphics(SDL_Renderer *r) : renderer(r) {
+  if (!renderer) {
+    fprintf(stderr, "Error: SDL_Renderer is NULL in Graphics constructor.\n");
+    exit(1);
+  }
+}
+
 void Graphics::setColor(const Color &color) {
   currentColor = color;
-  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
+  if (SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a) != 0) {
+    fprintf(stderr, "Error setting render draw color: %s\n", SDL_GetError());
+    exit(1);
+  }
 }
 
 void Graphics::setFont(std::shared_ptr<Font> font) { currentFont = font; }
 void Graphics::setLineWidth(float width) { lineWidth = width; }
+
 void Graphics::clear(const Color &color) {
-  SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
-  SDL_RenderClear(renderer);
+  if (SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a) != 0) {
+    fprintf(stderr, "Error setting render draw color for clear: %s\n", SDL_GetError());
+    exit(1);
+  }
+  if (SDL_RenderClear(renderer) != 0) {
+    fprintf(stderr, "Error clearing renderer: %s\n", SDL_GetError());
+    exit(1);
+  }
 }
 
 void Graphics::present() { SDL_RenderPresent(renderer); }
+
 void Graphics::drawPoint(const Vec2 &pos) {
-  SDL_RenderDrawPoint(renderer, (int)pos.x, (int)pos.y);
+  if (SDL_RenderDrawPoint(renderer, (int)pos.x, (int)pos.y) != 0) {
+    fprintf(stderr, "Error drawing point: %s\n", SDL_GetError());
+    exit(1);
+  }
 }
 
 void Graphics::drawLine(const Vec2 &start, const Vec2 &end) {
   if (lineWidth <= 1.0f) {
-    SDL_RenderDrawLine(renderer, (int)start.x, (int)start.y, (int)end.x,
-                       (int)end.y);
+    if (SDL_RenderDrawLine(renderer, (int)start.x, (int)start.y, (int)end.x,
+                           (int)end.y) != 0) {
+      fprintf(stderr, "Error drawing line: %s\n", SDL_GetError());
+      exit(1);
+    }
   } else {
     Vec2 dir = (end - start).normalize();
     Vec2 perp(-dir.y, dir.x);
@@ -31,16 +57,25 @@ void Graphics::drawLine(const Vec2 &start, const Vec2 &end) {
         {(int)(end.x - offset.x), (int)(end.y - offset.y)},
         {(int)(end.x + offset.x), (int)(end.y + offset.y)}};
 
-    SDL_RenderDrawLines(renderer, points, 5);
+    if (SDL_RenderDrawLines(renderer, points, 5) != 0) {
+      fprintf(stderr, "Error drawing thick line: %s\n", SDL_GetError());
+      exit(1);
+    }
   }
 }
 
 void Graphics::drawRect(const Vec2 &pos, const Vec2 &size, bool filled) {
   SDL_Rect rect = {(int)pos.x, (int)pos.y, (int)size.x, (int)size.y};
   if (filled) {
-    SDL_RenderFillRect(renderer, &rect);
+    if (SDL_RenderFillRect(renderer, &rect) != 0) {
+      fprintf(stderr, "Error filling rectangle: %s\n", SDL_GetError());
+      exit(1);
+    }
   } else {
-    SDL_RenderDrawRect(renderer, &rect);
+    if (SDL_RenderDrawRect(renderer, &rect) != 0) {
+      fprintf(stderr, "Error drawing rectangle: %s\n", SDL_GetError());
+      exit(1);
+    }
   }
 }
 
@@ -58,12 +93,18 @@ void Graphics::drawCircle(const Vec2 &center, float radius, bool filled) {
     for (int y = (int)-radius; y <= (int)radius; y++) {
       for (int x = (int)-radius; x <= (int)radius; x++) {
         if (x * x + y * y <= radius * radius) {
-          SDL_RenderDrawPoint(renderer, (int)center.x + x, (int)center.y + y);
+          if (SDL_RenderDrawPoint(renderer, (int)center.x + x, (int)center.y + y) != 0) {
+            fprintf(stderr, "Error drawing filled circle point: %s\n", SDL_GetError());
+            exit(1);
+          }
         }
       }
     }
   } else {
-    SDL_RenderDrawLines(renderer, points.data(), points.size());
+    if (SDL_RenderDrawLines(renderer, points.data(), points.size()) != 0) {
+      fprintf(stderr, "Error drawing circle: %s\n", SDL_GetError());
+      exit(1);
+    }
   }
 }
 
@@ -81,10 +122,16 @@ void Graphics::drawEllipse(const Vec2 &center, const Vec2 &radii, bool filled) {
     for (int i = 1; i < segments; i++) {
       SDL_Point triangle[3] = {
           {(int)center.x, (int)center.y}, points[i - 1], points[i]};
-      SDL_RenderDrawLines(renderer, triangle, 4);
+      if (SDL_RenderDrawLines(renderer, triangle, 4) != 0) {
+        fprintf(stderr, "Error drawing filled ellipse triangle: %s\n", SDL_GetError());
+        exit(1);
+      }
     }
   } else {
-    SDL_RenderDrawLines(renderer, points.data(), points.size());
+    if (SDL_RenderDrawLines(renderer, points.data(), points.size()) != 0) {
+      fprintf(stderr, "Error drawing ellipse: %s\n", SDL_GetError());
+      exit(1);
+    }
   }
 }
 
@@ -92,8 +139,14 @@ void Graphics::drawTexture(std::shared_ptr<Texture> texture,
                            const Transform &transform, const Color &tint) {
   if (!texture || !texture->texture)
     return;
-  SDL_SetTextureColorMod(texture->texture, tint.r, tint.g, tint.b);
-  SDL_SetTextureAlphaMod(texture->texture, tint.a);
+  if (SDL_SetTextureColorMod(texture->texture, tint.r, tint.g, tint.b) != 0) {
+    fprintf(stderr, "Error setting texture color mod: %s\n", SDL_GetError());
+    exit(1);
+  }
+  if (SDL_SetTextureAlphaMod(texture->texture, tint.a) != 0) {
+    fprintf(stderr, "Error setting texture alpha mod: %s\n", SDL_GetError());
+    exit(1);
+  }
   SDL_Rect dst = {
       (int)(transform.position.x - transform.origin.x * transform.scale.x),
       (int)(transform.position.y - transform.origin.y * transform.scale.y),
@@ -101,11 +154,17 @@ void Graphics::drawTexture(std::shared_ptr<Texture> texture,
       (int)(texture->height * transform.scale.y)};
 
   if (transform.rotation == 0.0f) {
-    SDL_RenderCopy(renderer, texture->texture, nullptr, &dst);
+    if (SDL_RenderCopy(renderer, texture->texture, nullptr, &dst) != 0) {
+      fprintf(stderr, "Error rendering texture: %s\n", SDL_GetError());
+      exit(1);
+    }
   } else {
     SDL_Point center = transform.getSDLOrigin();
-    SDL_RenderCopyEx(renderer, texture->texture, nullptr, &dst,
-                     transform.getRotation(), &center, SDL_FLIP_NONE);
+    if (SDL_RenderCopyEx(renderer, texture->texture, nullptr, &dst, 
+                         transform.getRotation(), &center, SDL_FLIP_NONE) != 0) {
+      fprintf(stderr, "Error rendering texture with rotation: %s\n", SDL_GetError());
+      exit(1);
+    }
   }
 }
 
@@ -114,16 +173,26 @@ void Graphics::drawText(const std::string &text, const Vec2 &pos,
   if (!currentFont || !currentFont->font)
     return;
   SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
-  SDL_Surface *surface =
+  SDL_Surface *surface = 
       TTF_RenderText_Solid(currentFont->font, text.c_str(), sdlColor);
-  if (!surface)
+  if (!surface) {
+    fprintf(stderr, "Warning: Error rendering text to surface: %s\n", SDL_GetError());
     return;
-  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
-  if (texture) {
-    SDL_Rect dst = {(int)pos.x, (int)pos.y, surface->w, surface->h};
-    SDL_RenderCopy(renderer, texture, nullptr, &dst);
-    SDL_DestroyTexture(texture);
   }
+  SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+  if (!texture) {
+    fprintf(stderr, "Warning: Error creating texture from surface: %s\n", SDL_GetError());
+    SDL_FreeSurface(surface);
+    return;
+  }
+  SDL_Rect dst = {(int)pos.x, (int)pos.y, surface->w, surface->h};
+  if (SDL_RenderCopy(renderer, texture, nullptr, &dst) != 0) {
+    fprintf(stderr, "Error copying text texture to renderer: %s\n", SDL_GetError());
+    SDL_DestroyTexture(texture);
+    SDL_FreeSurface(surface);
+    exit(1);
+  }
+  SDL_DestroyTexture(texture);
   SDL_FreeSurface(surface);
 }
 
@@ -154,8 +223,11 @@ void Graphics::drawPolygon(const std::vector<Vec2> &vertices, bool filled) {
       }
       std::sort(intersections.begin(), intersections.end());
       for (size_t i = 0; i + 1 < intersections.size(); i += 2) {
-        SDL_RenderDrawLine(renderer, (int)intersections[i], y,
-                           (int)intersections[i + 1], y);
+        if (SDL_RenderDrawLine(renderer, (int)intersections[i], y, 
+                               (int)intersections[i + 1], y) != 0) {
+          fprintf(stderr, "Error drawing filled polygon line: %s\n", SDL_GetError());
+          exit(1);
+        }
       }
     }
   } else {
@@ -164,16 +236,10 @@ void Graphics::drawPolygon(const std::vector<Vec2> &vertices, bool filled) {
       points.push_back({(int)v.x, (int)v.y});
     }
     points.push_back(points[0]);
-    SDL_RenderDrawLines(renderer, points.data(), points.size());
+    if (SDL_RenderDrawLines(renderer, points.data(), points.size()) != 0) {
+      fprintf(stderr, "Error drawing polygon: %s\n", SDL_GetError());
+      exit(1);
+    }
   }
 }
 
-Camera &Graphics::getCamera() { return camera; }
-void Graphics::setCamera(const Camera &cam) { camera = cam; }
-void Graphics::pushMatrix() {}
-void Graphics::popMatrix() {}
-void Graphics::translate(const Vec2 &offset) { camera.translate(offset * -1); }
-void Graphics::rotate(float angle) { camera.rotate(angle * -1); }
-void Graphics::scale(const Vec2 &scale) {
-  camera.scale = camera.scale * Vec2(1.0f / scale.x, 1.0f / scale.y);
-}
