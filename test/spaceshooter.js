@@ -284,7 +284,7 @@ function updateGame(dt) {
         }
     }
     
-    if (enemies.length === 0 && levelTimer > 5.0) {
+    if (enemies.length === 0 && levelTimer > 3.0) {
         gameState = GAME_STATES.LEVEL_COMPLETE;
     }
 }
