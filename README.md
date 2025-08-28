@@ -1,7 +1,9 @@
 <div align="center">
   <img src="https://github.com/user-attachments/assets/fdbf081f-cd08-4baa-94d8-337e8ffeecd2" alt="Tensai <3" width="100%" />
 </div>
+
 ---
+
 <p align="center">
   <b>Tensai</b> is a powerful <b>C++ game engine</b> with seamless <b>Node.js bindings</b>, 
   designed to help developers build <i>engaging games</i> and <i>rich multimedia apps</i>.
