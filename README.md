@@ -1,19 +1,24 @@
 <div align="center">
-<img width="1200" height="480" alt="Tensai <3" src="https://github.com/user-attachments/assets/fdbf081f-cd08-4baa-94d8-337e8ffeecd2" />
+  <img src="https://github.com/user-attachments/assets/fdbf081f-cd08-4baa-94d8-337e8ffeecd2" alt="Tensai <3" width="100%" />
 </div>
-
-Tensai is a powerful C++ game engine with seamless Node.js bindings, meticulously crafted to empower developers in creating engaging games and rich multimedia applications. It provides a robust foundation with essential modules for graphics, audio, input, physics, and more.
+<p align="center">
+  <b>Tensai</b> is a powerful <b>C++ game engine</b> with seamless <b>Node.js bindings</b>, 
+  designed to help developers build <i>engaging games</i> and <i>rich multimedia apps</i>.
+</p>
 
 ## Features
 
--   **Graphics:** Advanced rendering capabilities for stunning visual experiences.
--   **Audio:** Comprehensive sound and music management for immersive auditory environments.
--   **Input:** Flexible handling of user input across various devices.
--   **Physics:** Integrated physics engine for realistic object interactions and simulations.
--   **Camera:** Intuitive camera controls for dynamic scene perspectives.
--   **Timer:** High-precision timing utilities for game loops and animations.
--   **Random:** Robust random number generation for unpredictable game elements.
--   **Resources:** Efficient management of game assets including fonts, music, sounds, and textures.
+| Module    | What it does |
+|-----------|--------------|
+| **Graphics** | Advanced rendering for stunning visuals |
+| **Audio**    | Full sound & music management |
+| **Input**    | Flexible handling for keyboards, mice, controllers |
+| **Physics**  | Built-in physics for realistic interactions |
+| **Camera**   | Intuitive, dynamic scene controls |
+| **Timer**    | High-precision loops & animation timing |
+| **Random**   | Robust RNG for unpredictability |
+| **Resources**| Efficient asset management (fonts, music, textures) |
+
 
 ## Installation
 
