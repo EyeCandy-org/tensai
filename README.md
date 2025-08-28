@@ -9,6 +9,14 @@
   designed to help developers build <i>engaging games</i> and <i>rich multimedia apps</i>.
 </p>
 
+---
+
+<p align="center">
+  <img src="https://img.shields.io/badge/c%2B%2B-17-blue?logo=cplusplus" />
+  <img src="https://img.shields.io/badge/node.js-compatible-green?logo=node.js" />
+  <img src="https://img.shields.io/badge/license-LGPL3.0-purple" />
+</p>
+
 ## Features
 
 | Module    | What it does |
