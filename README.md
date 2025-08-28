@@ -4,6 +4,9 @@
 ![GitHub issues](https://img.shields.io/github/issues/neoapps-dev/tensai)
 ![License](https://img.shields.io/badge/License-LGPL--3.0-blue.svg)
 
+<img width="1200" height="480" alt="Tensai <3" src="https://github.com/user-attachments/assets/fdbf081f-cd08-4baa-94d8-337e8ffeecd2" />
+
+
 Tensai is a powerful and versatile C++ library with seamless Node.js bindings, meticulously crafted to empower developers in creating engaging games and rich multimedia applications. It provides a robust foundation with essential modules for graphics, audio, input, physics, and more.
 
 ## Features
